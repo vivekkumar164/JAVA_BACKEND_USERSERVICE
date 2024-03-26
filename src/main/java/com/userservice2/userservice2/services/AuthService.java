@@ -2,11 +2,14 @@ package com.userservice2.userservice2.services;
 
 
 import com.userservice2.userservice2.dtos.UserDto;
+import com.userservice2.userservice2.models.Role;
 import com.userservice2.userservice2.models.Session;
 import com.userservice2.userservice2.models.SessionStatus;
 import com.userservice2.userservice2.models.User;
 import com.userservice2.userservice2.repositories.SessionRepository;
 import com.userservice2.userservice2.repositories.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.MacAlgorithm;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -132,6 +135,24 @@ public class AuthService {
         if (sessionOptional.isEmpty()) {
             return null;
         }
+
+        Session session = new Session();
+
+        if(!session.getSessionStatus().equals(SessionStatus.ACTIVE)){
+            return  SessionStatus.ENDED;
+        }
+
+        Date currentTime = new Date();
+        if(session.getExpiringAt().before(currentTime)){
+            return  SessionStatus.ENDED;
+        }
+
+        // Jwt decoding
+        Jws<Claims> jwsClaim = Jwts.parser().build().parseSignedClaims(token);
+
+        String email = (String) jwsClaim.getPayload().get("email");
+        List<Role> roles = (List<Role>) jwsClaim.getPayload().get("roles");
+        Date createdAt = (Date) jwsClaim.getPayload().get("createdAt");
 
         return SessionStatus.ACTIVE;
     }
