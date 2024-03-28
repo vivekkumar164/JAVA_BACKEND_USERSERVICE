@@ -13,9 +13,12 @@ import java.util.Set;
 @Entity
 @Getter
 @Setter
+@JsonDeserialize(as = User.class)
 public class User extends BaseModel {
     private String email;
     private String password;
-    @ManyToMany
+
+    @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
+    @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 }
